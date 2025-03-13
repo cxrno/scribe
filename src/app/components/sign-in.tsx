@@ -1,7 +1,6 @@
 "use client";
 
-import { FaSignOutAlt } from "react-icons/fa";
-import { signIn, signOut } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import Image from "next/image";
 
 export default function AuthButton({ label }: { label: string}) {

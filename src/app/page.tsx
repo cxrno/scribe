@@ -2,7 +2,7 @@
 
 import AuthButton from "./components/sign-in";
 import Image from "next/image";
-import { FaLocationArrow, FaImage, FaPaintBrush, FaCamera, FaMicrophone, FaEye, FaPencilAlt, FaFileAlt, FaEllipsisV, FaEllipsisH, FaGoogle} from "react-icons/fa";
+import { FaLocationArrow, FaImage, FaPaintBrush, FaCamera, FaMicrophone, FaEye, FaPencilAlt, FaFileAlt, FaEllipsisV} from "react-icons/fa";
 import { IconType } from 'react-icons';
 import { redirect } from "next/navigation";
 import { useSession } from "next-auth/react";
