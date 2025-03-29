@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "./auth";
 
 export default auth((req) => {
-  const protectedPaths = ["/dashboard", "/profile"];
+  const protectedPaths = ["/reports"];
   const isPathProtected = protectedPaths.some((path) => 
     req.nextUrl.pathname.startsWith(path)
   );
