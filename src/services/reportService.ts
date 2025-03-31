@@ -3,7 +3,7 @@
 import { auth } from "../../auth";
 import { db } from "@/app/db";
 import { reports } from "@/app/db/schema";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 
 
 export async function updateReport(reportId: string, reportData: { title: string, description: string, tags: string[] }) {
@@ -112,6 +112,21 @@ export async function discardEmptyReport(reportId: string) {
     }
     
     return null;
+}
+
+export async function getRecentTags() {
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Unauthorized");
+    }
+    
+    const recentTags = await db.query.reports.findMany({
+        where: eq(reports.user_id, session.user.id),
+        orderBy: [desc(reports.updated_at)],
+        limit: 5,
+    });
+    
+    return recentTags.map(report => report.tags).flat();
 }
 
 
