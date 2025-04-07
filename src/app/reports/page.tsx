@@ -5,10 +5,9 @@ import { redirect, useRouter } from "next/navigation";
 import SignOutButton from "../components/sign-out";
 import { FaPlusCircle, FaEdit, FaDownload, FaTrash } from "react-icons/fa";
 import Image from "next/image";
-import { createEmptyReport, getReports } from "@/services/reportService";
+import { createEmptyReport, getReports, getRecentTags } from "@/services/reportService";
 import { useEffect, useState } from "react";
 
-// Types
 interface Report {
   id: string;
   title: string;
@@ -52,17 +51,42 @@ function ReportsHeader() {
 }
 
 function TagSearch() {
+  const [recentTags, setRecentTags] = useState<string[]>([]);
+  
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const tags = await getRecentTags();
+        setRecentTags(tags.filter((tag): tag is string => tag !== null));
+      } catch (error) {
+        console.error("Failed to fetch tags:", error);
+      }
+    };
+    
+    fetchTags();
+  }, []);
+  
   return (
-    <div className="px-4 py-3">
+    <div className="px-4 py-3 bg-[#1B1F3F] rounded-lg m-4">
       <input 
         type="text" 
-        className="w-full bg-[#282434] text-white rounded-lg p-3" 
+        className="w-full bg-[#2d3363] text-white rounded-lg p-3" 
         placeholder="Search by tag" 
       />
       <div className="mt-2">
-        <p className="text-gray-400 text-sm mb-1">Previously used</p>
+        <p className="text-gray-300 text-sm mb-1">Previously used</p>
         <div className="flex flex-wrap gap-2">
-  
+          {recentTags.map((tag, index) => (
+            <button 
+              key={index} 
+              className="bg-blue-500 text-white px-2 py-1 rounded-md text-xs cursor-pointer"
+              onClick={() => {
+                console.log(tag); //TODO: Implement tag search
+              }}
+            >
+              {tag}
+            </button>
+          ))}
         </div>
       </div>
     </div>
@@ -70,14 +94,16 @@ function TagSearch() {
 }
 
 function ReportCard({ report, onEdit }: { report: Report, onEdit: (id: string) => void }) {
-  const formattedDate = report.created_at.toString();
-  
+  const date = new Date(report.created_at);
+  const formattedDate = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()} ${date.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit', hour12: true})}`;
+  const description = report.description.substring(0, 50) + "...";
   return (
-    <div className="bg-[#1B1F3F] rounded-lg p-4 mb-3">
+    <div className="bg-[#1B1F3F] rounded-lg p-4 mb-2">
       <div className="flex justify-between items-start">
         <div>
           <h3 className="text-white font-medium">{report.title}</h3>
           <p className="text-gray-400 text-sm">{formattedDate}</p>
+          <p className="text-gray-300 text-sm">{description}</p>
           <div className="flex flex-wrap gap-2 mt-2">
             {report.tags.map((tag, index) => {
               let bgColor = "bg-blue-500";

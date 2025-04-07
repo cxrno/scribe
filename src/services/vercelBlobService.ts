@@ -1,40 +1,40 @@
 import { put, del, list } from "@vercel/blob";
+import { mediaType } from "@/app/db/schema";
 
-export async function uploadFile(file: File) {
+export type MediaTypeValue = (typeof mediaType.enumValues)[number];
+
+export async function uploadFile(file: File, type: MediaTypeValue): Promise<string | null> {
   try {
-    const blob = await put(file.name, file, {
+    const filename = `${type}/${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
+    
+    const blob = await put(filename, file, {
       access: 'public',
     });
     
-    return {
-      url: blob.url,
-      pathname: blob.pathname,
-      success: true
-    };
+    return blob.url;
   } catch (error) {
     console.error("Error uploading file:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred"
-    };
+    return null;
   }
 }
 
-export async function deleteFile(url: string) {
+export async function deleteFile(url: string): Promise<boolean> {
   try {
     await del(url);
-    return { success: true };
+    return true;
   } catch (error) {
     console.error("Error deleting file:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred"
-    };
+    return false;
   }
 }
 
-
-export async function getFiles() {
-
-    // todo
-}
+export async function getFile(url: string): Promise<Response | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch file: ${response.status}`);
+    return response;
+  } catch (error) {
+    console.error("Error getting file:", error);
+    return null;
+  }
+} 

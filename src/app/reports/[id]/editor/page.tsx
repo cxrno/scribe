@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
-import { getReport, discardEmptyReport, updateReport, deleteReport } from "@/services/reportService";
+import { getReport, discardEmptyReport, updateReport, deleteReport, getRecentTags } from "@/services/reportService";
 import { FaTrash, FaPen } from "react-icons/fa";
 
 export default function Editor() {
@@ -20,35 +20,36 @@ export default function Editor() {
   const [lastUpdated, setLastUpdated] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editedReport, setEditedReport] = useState({
-    title: "",
-    description: "",
-    tags: [] as string[]
-  });
+  const [editedReport, setEditedReport] = useState({...report});
   const [newTag, setNewTag] = useState("");
+  const [recentTags, setRecentTags] = useState<string[]>([]);
 
+  const [created, setCreated] = useState("");
   useEffect(() => {
     const fetchReport = async () => {
       try {
         const data = await getReport(reportId);
-        setReport({
+
+        const reportData = {
           title: data.title || "Untitled Report",
           description: data.description || "No description",
-          tags: data.tags || []
-        });
+          tags: data.tags || [],
+        };
         
-        setEditedReport({
-          title: data.title || "Untitled Report",
-          description: data.description || "No description",
-          tags: data.tags || []
-        });
+        setReport(reportData);
+        setEditedReport(reportData);
         
+        const created = new Date(data.created_at);
         const updated = new Date(data.updated_at);
         setLastUpdated(updated.toLocaleDateString() + " at " + updated.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
-        
-        setIsLoading(false);
+        setCreated(created.toLocaleDateString() + " at " + created.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+
+        // Fetch recent tags
+        const tags = await getRecentTags();
+        setRecentTags(tags.filter((tag): tag is string => tag !== null));
       } catch (error) {
         console.error("Failed to fetch report:", error);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -56,24 +57,31 @@ export default function Editor() {
     fetchReport();
   }, [reportId]);
 
+  const navigateToReports = () => router.push("/reports");
+
   const handleExit = async () => {
     try {
       await discardEmptyReport(reportId);
-      router.push("/reports");
     } catch (error) {
       console.error("Error discarding report:", error);
-      router.push("/reports");
+    } finally {
+      navigateToReports();
     }
   };
 
+
   const handleDelete = async () => {
-    if (report.title === "Untitled Report" && report.description === "No description" && report.tags.length === 0) {
+    const isEmpty = report.title === "Untitled Report" && 
+                   report.description === "No description" && 
+                   report.tags.length === 0;
+    
+    if (isEmpty) {
       try {
         await discardEmptyReport(reportId);
-        router.push("/reports");
+        navigateToReports();
       } catch (error) {
         console.error("Error discarding report:", error);
-        router.push("/reports");
+        navigateToReports();
       }
     } else {
       setShowDeleteConfirm(true);
@@ -83,7 +91,7 @@ export default function Editor() {
   const confirmDelete = async () => {
     try {
       await deleteReport(reportId);
-      router.push("/reports");
+      navigateToReports();
     } catch (error) {
       console.error("Failed to delete report:", error);
     }
@@ -97,11 +105,7 @@ export default function Editor() {
 
   const handleSaveEdit = async () => {
     try {
-      await updateReport(reportId, {
-        title: editedReport.title,
-        description: editedReport.description,
-        tags: editedReport.tags
-      });
+      await updateReport(reportId, editedReport);
       setReport({...editedReport});
       setShowEditModal(false);
     } catch (error) {
@@ -109,9 +113,12 @@ export default function Editor() {
     }
   };
 
-  const addTag = (tag: string) => {
+  const addTag = () => {
+    const tag = newTag.trim();
     if (tag && !editedReport.tags.includes(tag)) {
       setEditedReport({...editedReport, tags: [...editedReport.tags, tag]});
+      setNewTag("");
+      setLastUpdated(new Date().toLocaleDateString() + " at " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
     }
   };
 
@@ -120,13 +127,6 @@ export default function Editor() {
       ...editedReport, 
       tags: editedReport.tags.filter(tag => tag !== tagToRemove)
     });
-  };
-
-  const handleAddNewTag = () => {
-    if (newTag.trim() !== "") {
-      addTag(newTag.trim());
-      setNewTag("");
-    }
   };
 
   if (isLoading) {
@@ -150,7 +150,7 @@ export default function Editor() {
         <div className="flex flex-row justify-between items-start">
           <div>
             <h2 className="text-white text-xl font-bold">{report.title}</h2>
-            <p className="text-gray-400 text-sm">Created {lastUpdated}</p>
+            <p className="text-gray-400 text-sm">Created {created}</p>
             <p className="text-gray-400 text-sm">Last updated {lastUpdated}</p>
             {report.tags.length > 0 ? (
               <div className="flex flex-row gap-2 mt-2">
@@ -246,7 +246,7 @@ export default function Editor() {
                   placeholder="Add New Tag"
                 />
                 <button 
-                  onClick={handleAddNewTag}
+                  onClick={addTag}
                   className="ml-2 bg-blue-500 text-white px-3 py-2 rounded-md"
                 >
                   Add
@@ -256,7 +256,19 @@ export default function Editor() {
               <div className="mb-2">
                 <p className="text-gray-400 text-sm mb-1">Previously used</p>
                 <div className="flex flex-wrap gap-2">
-                    { /* todo */ }
+                  {recentTags.map((tag, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center bg-blue-500 text-white px-2 py-1 rounded-md text-sm cursor-pointer"
+                      onClick={() => {
+                        if (!editedReport.tags.includes(tag)) {
+                          setEditedReport({...editedReport, tags: [...editedReport.tags, tag]});
+                        }
+                      }}
+                    >
+                      <span>{tag}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
               

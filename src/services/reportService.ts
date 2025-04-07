@@ -4,11 +4,27 @@ import { auth } from "../../auth";
 import { db } from "@/app/db";
 import { reports } from "@/app/db/schema";
 import { desc, eq } from "drizzle-orm";
+import { getAttachmentCountsByType } from "./attachmentService";
 
+
+async function verifyUserOwnership(reportId: string, existingReport?: any) {
+    const session = await auth();
+    if (!session?.user?.id) {
+        throw new Error("Unauthorized");
+    }
+    const report = existingReport || await db.query.reports.findFirst({
+        where: eq(reports.id, reportId),
+    });
+    
+    if (!report) {
+        throw new Error("Report not found");
+    }
+    return report.user_id === session.user.id;
+}
 
 export async function updateReport(reportId: string, reportData: { title: string, description: string, tags: string[] }) {
     const session = await auth();
-    if (!session?.user?.id) {
+    if (!session?.user?.id || !(await verifyUserOwnership(reportId))) {
         throw new Error("Unauthorized");
     }
     
@@ -24,8 +40,13 @@ export async function updateReport(reportId: string, reportData: { title: string
 
 export async function deleteReport(reportId: string) {
     const session = await auth();
-    if (!session?.user?.id) {
+    if (!session?.user?.id || !(await verifyUserOwnership(reportId))) {
         throw new Error("Unauthorized");
+    }
+
+    const attachmentCounts = await getAttachmentCountsByType(reportId);
+    if (attachmentCounts.picture > 0 || attachmentCounts.video > 0 || attachmentCounts.audio > 0 || attachmentCounts.sketch > 0 || attachmentCounts.document > 0) {
+        throw new Error("Report has attachments");
     }
     
     await db.delete(reports).where(eq(reports.id, reportId));
@@ -33,17 +54,17 @@ export async function deleteReport(reportId: string) {
 }
 
 export async function getReport(reportId: string) {
-    const session = await auth();
-    if (!session?.user?.id) {
-        throw new Error("Unauthorized");
-    }
-    
     const report = await db.query.reports.findFirst({
         where: eq(reports.id, reportId),
     });
     
     if (!report) {
         throw new Error("Report not found");
+    }
+    
+    const session = await auth();
+    if (!session?.user?.id || report.user_id !== session.user.id) {
+        throw new Error("Unauthorized");
     }
     
     return {
@@ -96,6 +117,7 @@ export async function createEmptyReport() {
     return result[0].id;
 }
 
+// TODO: NEED TO CHECK IF REPORT HAS ATTACHMENTS AS WELL.
 export async function discardEmptyReport(reportId: string) {
     const session = await auth();
     if (!session?.user?.id) {
@@ -105,7 +127,16 @@ export async function discardEmptyReport(reportId: string) {
     const report = await db.query.reports.findFirst({
         where: eq(reports.id, reportId),
     });
+
+    if(report?.user_id !== session.user.id) {
+        throw new Error("Unauthorized");
+    }
     
+    const attachmentCounts = await getAttachmentCountsByType(reportId);
+    if (attachmentCounts.picture > 0 || attachmentCounts.video > 0 || attachmentCounts.audio > 0 || attachmentCounts.sketch > 0 || attachmentCounts.document > 0) {
+        throw new Error("Report has attachments");
+    }
+
     if (report?.title === "Untitled Report" && report?.description === "No description") {
         await db.delete(reports).where(eq(reports.id, reportId));
         return true;
