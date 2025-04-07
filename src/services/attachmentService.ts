@@ -5,13 +5,13 @@ import { eq } from "drizzle-orm";
 import { uploadFile, deleteFile } from "./vercelBlobService";
 
 
-async function verifyUserOwnership(attachmentId: string, existingAttachment?: any) {
+async function verifyUserOwnership(attachmentId: string) {
     const session = await auth();
     if (!session?.user?.id) {
         throw new Error("Unauthorized");
     }
 
-    const attachmentReport = existingAttachment || await db.query.reports.findFirst({
+    const attachmentReport = await db.query.reports.findFirst({
         where: eq(reports.id, attachmentId),
     });
 
