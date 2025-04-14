@@ -1,4 +1,6 @@
-import { put, del, list } from "@vercel/blob";
+'use server'
+
+import { put, del } from "@vercel/blob";
 import { mediaType } from "@/app/db/schema";
 
 export type MediaTypeValue = (typeof mediaType.enumValues)[number];

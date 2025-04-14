@@ -3,9 +3,11 @@
 import { useSession } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
 import SignOutButton from "../components/sign-out";
-import { FaPlusCircle, FaEdit, FaDownload, FaTrash } from "react-icons/fa";
+import { FaPlusCircle, FaEdit, FaDownload, FaTrash, FaImage, FaVideo, FaFileAudio, FaFile, FaPen, FaCamera, FaMicrophone, FaFileAlt } from "react-icons/fa";
+import { IconType } from "react-icons";
 import Image from "next/image";
 import { createEmptyReport, getReports, getRecentTags } from "@/services/reportService";
+import { getAttachmentCountsByType } from "@/services/attachmentService";
 import { useEffect, useState } from "react";
 
 interface Report {
@@ -15,6 +17,22 @@ interface Report {
   created_at: Date;
   updated_at: Date;
   tags: string[];
+  attachmentCounts?: Record<string, number>;
+}
+
+function NumberedAttachments({ icon: Icon, number }: { icon: IconType, number: number }) {
+  if (number <= 0) return null;
+  
+  return (
+    <div className="relative inline-block">
+      <div className="w-8 h-8 flex items-center justify-center text-white">
+        <Icon className="w-6 h-6" />
+      </div>
+      <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-white text-xs font-bold">
+        {number}
+      </div>
+    </div>
+  );
 }
 
 function NewReportButton() {
@@ -97,6 +115,15 @@ function ReportCard({ report, onEdit }: { report: Report, onEdit: (id: string) =
   const date = new Date(report.created_at);
   const formattedDate = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()} ${date.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit', hour12: true})}`;
   const description = report.description.substring(0, 50) + "...";
+  
+  const mediaIconMap = {
+    'picture': FaCamera,
+    'video': FaVideo,
+    'audio': FaMicrophone,
+    'sketch': FaPen,
+    'document': FaFileAlt
+  };
+  
   return (
     <div className="bg-[#1B1F3F] rounded-lg p-4 mb-2">
       <div className="flex justify-between items-start">
@@ -117,6 +144,19 @@ function ReportCard({ report, onEdit }: { report: Report, onEdit: (id: string) =
               );
             })}
           </div>
+          {report.attachmentCounts && (
+            <div className="flex gap-3 mt-2">
+              {Object.entries(report.attachmentCounts).map(([type, count]) => (
+                count > 0 && (
+                  <NumberedAttachments 
+                    key={type} 
+                    icon={mediaIconMap[type as keyof typeof mediaIconMap]} 
+                    number={count} 
+                  />
+                )
+              ))}
+            </div>
+          )}
         </div>
         <button 
           onClick={() => onEdit(report.id)}
@@ -139,14 +179,28 @@ export default function Reports() {
     const fetchReports = async () => {
       try {
         const data = await getReports();
-        setReports(data.map(report => ({
+        const reportsWithBasicInfo = data.map(report => ({
           id: report.id,
           title: report.title || "",
           description: report.description || "",
           created_at: report.created_at,
           updated_at: report.updated_at,
           tags: report.tags || []
-        })));
+        }));
+        
+        const reportsWithAttachments = await Promise.all(
+          reportsWithBasicInfo.map(async (report) => {
+            try {
+              const counts = await getAttachmentCountsByType(report.id);
+              return { ...report, attachmentCounts: counts };
+            } catch (error) {
+              console.error(`Failed to fetch attachment counts for report ${report.id}:`, error);
+              return report;
+            }
+          })
+        );
+        
+        setReports(reportsWithAttachments);
       } catch (error) {
         console.error("Failed to fetch reports:", error);
       } finally {
@@ -166,12 +220,12 @@ export default function Reports() {
   }
 
   return (
-    <div className="flex flex-col h-screen]">
+    <div className="flex flex-col h-screen">
       <ReportsHeader />
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-hidden">
         <TagSearch />
         
-        <div className="px-4 pb-20">
+        <div className="px-4 pb-20 overflow-y-auto h-[calc(100vh-250px)]">
           {isLoading ? (
             <p className="text-white text-center mt-8">Loading reports...</p>
           ) : reports.length === 0 ? (

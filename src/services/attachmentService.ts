@@ -1,9 +1,11 @@
+'use server'
+
 import { auth } from "../../auth";
 import { db } from "@/app/db";
 import { reports, attachments, mediaType } from "@/app/db/schema";
 import { eq } from "drizzle-orm";
 import { uploadFile, deleteFile } from "./vercelBlobService";
-
+import { verifyReportUserOwnership } from "./reportService";
 
 async function verifyUserOwnership(attachmentId: string) {
     const session = await auth();
@@ -11,22 +13,30 @@ async function verifyUserOwnership(attachmentId: string) {
         throw new Error("Unauthorized");
     }
 
-    const attachmentReport = await db.query.reports.findFirst({
-        where: eq(reports.id, attachmentId),
+    const attachment = await db.query.attachments.findFirst({
+        where: eq(attachments.id, attachmentId),
     });
 
-    if (!attachmentReport) {
+    if (!attachment) {
+        throw new Error("Attachment not found");
+    }
+
+    const report = await db.query.reports.findFirst({
+        where: eq(reports.id, attachment.report_id),
+    });
+
+    if (!report) {
         throw new Error("Report not found");
     }
 
-    if (attachmentReport.user_id !== session.user.id) {
+    if (report.user_id !== session.user.id) {
         throw new Error("Unauthorized");
     }
 
     return true;
 }
 
-export async function createAttachment(reportId: string, file: File, mediaTypeValue: typeof mediaType.enumValues[number], title?: string, description?: string) {
+export async function createAttachment(reportId: string, file: File | null, mediaTypeValue: typeof mediaType.enumValues[number], title?: string, description?: string) {
     const session = await auth();
     if (!session?.user?.id)
         throw new Error("Unauthorized");
@@ -41,21 +51,22 @@ export async function createAttachment(reportId: string, file: File, mediaTypeVa
     if (report.user_id !== session.user.id) 
         throw new Error("Unauthorized");
     
+    let mediaUrl = null;
 
-    // vercel blob
-    const mediaUrl = await uploadFile(file, mediaTypeValue);
-    
-    if (!mediaUrl) {
-        throw new Error("Failed to upload file");
+    if (file && mediaTypeValue !== 'document') {
+        mediaUrl = await uploadFile(file, mediaTypeValue);
+        
+        if (!mediaUrl) {
+            throw new Error("Failed to upload file");
+        }
     }
 
-    // database
     const [attachment] = await db.insert(attachments).values({
         report_id: reportId,
         media_type: mediaTypeValue,
         title: title || "Untitled Attachment",
         description: description || "No description",
-        media_url: mediaUrl,
+        media_url: mediaUrl || "null",
         location: null,
         metadata: null,
         created_at: new Date(),
@@ -77,7 +88,10 @@ export async function addAttachmentMedia(attachmentId: string, file: File) {
     if (!attachment)
         throw new Error("Attachment not found");
 
-    // blob
+    if (attachment.media_type === 'document') {
+        return true;
+    }
+
     const mediaUrl = await uploadFile(file, attachment.media_type);
 
     if (!mediaUrl) {
@@ -91,6 +105,7 @@ export async function addAttachmentMedia(attachmentId: string, file: File) {
 
     return true;
 }
+
 export async function removeAttachmentMedia(attachmentId: string) {
     const session = await auth();
     if (!session?.user?.id || !(await verifyUserOwnership(attachmentId)))
@@ -103,10 +118,10 @@ export async function removeAttachmentMedia(attachmentId: string) {
     if (!attachment)
         throw new Error("Attachment not found");
 
-    // blob 
-    await deleteFile(attachment.media_url);
+    if (attachment.media_type !== 'document' && attachment.media_url) {
+        await deleteFile(attachment.media_url);
+    }
 
-    // database
     await db.update(attachments).set({
         media_url: "null",
         updated_at: new Date(),
@@ -159,7 +174,7 @@ export async function deleteAttachment(attachmentId: string) {
 
 export async function getAttachments(reportId: string) {
     const session = await auth();
-    if (!session?.user?.id || !(await verifyUserOwnership(reportId)))
+    if (!session?.user?.id || !(await verifyReportUserOwnership(reportId)))
         throw new Error("Unauthorized");
 
     const allAttachments = await db.query.attachments.findMany({
@@ -185,7 +200,7 @@ export async function getAttachment(attachmentId: string) {
 
 export async function getAttachmentCountsByType(reportId: string) {
     const session = await auth();
-    if (!session?.user?.id || !(await verifyUserOwnership(reportId)))
+    if (!session?.user?.id || !(await verifyReportUserOwnership(reportId)))
         throw new Error("Unauthorized");
 
     const allAttachments = await db.query.attachments.findMany({

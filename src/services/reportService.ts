@@ -7,7 +7,7 @@ import { desc, eq } from "drizzle-orm";
 import { getAttachmentCountsByType } from "./attachmentService";
 
 
-async function verifyUserOwnership(reportId: string, existingReport?: any) {
+export async function verifyReportUserOwnership(reportId: string, existingReport?: any) {
     const session = await auth();
     if (!session?.user?.id) {
         throw new Error("Unauthorized");
@@ -24,7 +24,7 @@ async function verifyUserOwnership(reportId: string, existingReport?: any) {
 
 export async function updateReport(reportId: string, reportData: { title: string, description: string, tags: string[] }) {
     const session = await auth();
-    if (!session?.user?.id || !(await verifyUserOwnership(reportId))) {
+    if (!session?.user?.id || !(await verifyReportUserOwnership(reportId))) {
         throw new Error("Unauthorized");
     }
     
@@ -40,7 +40,7 @@ export async function updateReport(reportId: string, reportData: { title: string
 
 export async function deleteReport(reportId: string) {
     const session = await auth();
-    if (!session?.user?.id || !(await verifyUserOwnership(reportId))) {
+    if (!session?.user?.id || !(await verifyReportUserOwnership(reportId))) {
         throw new Error("Unauthorized");
     }
 
@@ -63,7 +63,7 @@ export async function getReport(reportId: string) {
     }
     
     const session = await auth();
-    if (!session?.user?.id || report.user_id !== session.user.id) {
+        if (!session?.user?.id || !(await verifyReportUserOwnership(reportId))) {
         throw new Error("Unauthorized");
     }
     
@@ -117,7 +117,7 @@ export async function createEmptyReport() {
     return result[0].id;
 }
 
-// TODO: NEED TO CHECK IF REPORT HAS ATTACHMENTS AS WELL.
+
 export async function discardEmptyReport(reportId: string) {
     const session = await auth();
     if (!session?.user?.id) {

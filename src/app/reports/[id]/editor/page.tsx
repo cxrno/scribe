@@ -4,7 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { getReport, discardEmptyReport, updateReport, deleteReport, getRecentTags } from "@/services/reportService";
-import { FaTrash, FaPen } from "react-icons/fa";
+import { getAttachments, deleteAttachment } from "@/services/attachmentService";
+import { FaTrash, FaPen, FaImage, FaVideo, FaMicrophone, FaPaintBrush, FaFileAlt, FaEdit } from "react-icons/fa";
+import AttachmentTypeSelector from "@/app/components/AttachmentTypeSelector";
+import MediaAttachmentCreator from "@/app/components/MediaAttachmentCreator";
 
 export default function Editor() {
   const router = useRouter();
@@ -20,13 +23,23 @@ export default function Editor() {
   const [lastUpdated, setLastUpdated] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAttachmentTypeSelector, setShowAttachmentTypeSelector] = useState(false);
   const [editedReport, setEditedReport] = useState({...report});
   const [newTag, setNewTag] = useState("");
   const [recentTags, setRecentTags] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<any[]>([]);
 
   const [created, setCreated] = useState("");
+  
+  const [selectedAttachmentType, setSelectedAttachmentType] = useState<string | null>(null);
+  const [showMediaAttachmentCreator, setShowMediaAttachmentCreator] = useState(false);
+  const [editingAttachment, setEditingAttachment] = useState<any | null>(null);
+  const [mediaType, setMediaType] = useState<'picture' | 'video' | 'sketch' | 'document' | 'audio'>('picture');
+
+  const [showDeleteAttachmentConfirm, setShowDeleteAttachmentConfirm] = useState<string | null>(null);
+
   useEffect(() => {
-    const fetchReport = async () => {
+    const fetchData = async () => {
       try {
         const data = await getReport(reportId);
 
@@ -44,31 +57,34 @@ export default function Editor() {
         setLastUpdated(updated.toLocaleDateString() + " at " + updated.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
         setCreated(created.toLocaleDateString() + " at " + created.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
 
-        // Fetch recent tags
         const tags = await getRecentTags();
         setRecentTags(tags.filter((tag): tag is string => tag !== null));
+        
+        const attachmentsData = await getAttachments(reportId);
+        setAttachments(attachmentsData);
       } catch (error) {
-        console.error("Failed to fetch report:", error);
+        console.error("Failed to fetch data:", error);
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchReport();
+    fetchData();
   }, [reportId]);
 
   const navigateToReports = () => router.push("/reports");
 
   const handleExit = async () => {
+    const isEmpty = report.title === "Untitled Report" && report.description === "No description" && report.tags.length === 0;
     try {
-      await discardEmptyReport(reportId);
-    } catch (error) {
-      console.error("Error discarding report:", error);
-    } finally {
+      if (isEmpty) {
+        await discardEmptyReport(reportId);
+      }
+    } 
+    finally {
       navigateToReports();
     }
   };
-
 
   const handleDelete = async () => {
     const isEmpty = report.title === "Untitled Report" && 
@@ -86,7 +102,7 @@ export default function Editor() {
     } else {
       setShowDeleteConfirm(true);
     }
-  }
+  };
 
   const confirmDelete = async () => {
     try {
@@ -96,7 +112,7 @@ export default function Editor() {
       console.error("Failed to delete report:", error);
     }
     setShowDeleteConfirm(false);
-  }
+  };
 
   const handleEditClick = () => {
     setEditedReport({...report});
@@ -127,6 +143,99 @@ export default function Editor() {
       ...editedReport, 
       tags: editedReport.tags.filter(tag => tag !== tagToRemove)
     });
+  };
+
+  const handleNewAttachment = () => {
+    setShowAttachmentTypeSelector(true);
+  };
+
+  const handleAttachmentTypeSelected = (type: string) => {
+    setShowAttachmentTypeSelector(false);
+    setSelectedAttachmentType(type);
+    
+    if (type === 'picture') {
+      setMediaType('picture');
+      setShowMediaAttachmentCreator(true);
+    } else if (type === 'video') {
+      setMediaType('video');
+      setShowMediaAttachmentCreator(true);
+    } else if (type === 'sketch') {
+      setMediaType('sketch');
+      setShowMediaAttachmentCreator(true);
+    } else if (type === 'document') {
+      setMediaType('document');
+      setShowMediaAttachmentCreator(true);
+    } else if (type === 'audio') {
+      setMediaType('audio');
+      setShowMediaAttachmentCreator(true);
+    } else {
+      console.log("Selected attachment type:", type);
+      alert(`${type} attachments will be implemented in a future update.`);
+    }
+  };
+  
+  const handleAttachmentComplete = async () => {
+    setShowMediaAttachmentCreator(false);
+    setSelectedAttachmentType(null);
+    
+    try {
+      const attachmentsData = await getAttachments(reportId);
+      setAttachments(attachmentsData);
+    } catch (error) {
+      console.error("Failed to refresh attachments:", error);
+    }
+  };
+
+  const handleEditAttachment = (attachment: any) => {
+    setEditingAttachment(attachment);
+    
+    if (attachment.media_type === 'picture') {
+      setMediaType('picture');
+      setShowMediaAttachmentCreator(true);
+    } else if (attachment.media_type === 'video') {
+      setMediaType('video');
+      setShowMediaAttachmentCreator(true);
+    } else if (attachment.media_type === 'sketch') {
+      setMediaType('sketch');
+      setShowMediaAttachmentCreator(true);
+    } else if (attachment.media_type === 'document') {
+      setMediaType('document');
+      setShowMediaAttachmentCreator(true);
+    } else if (attachment.media_type === 'audio') {
+      setMediaType('audio');
+      setShowMediaAttachmentCreator(true);
+    }
+  };
+
+  const getMediaTypeIcon = (mediaType: string) => {
+    switch (mediaType) {
+      case 'picture':
+        return <FaImage className="text-white" />;
+      case 'video':
+        return <FaVideo className="text-white" />;
+      case 'audio':
+        return <FaMicrophone className="text-white" />;
+      case 'sketch':
+        return <FaPaintBrush className="text-white" />;
+      case 'document':
+        return <FaFileAlt className="text-white" />;
+      default:
+        return <FaFileAlt className="text-white" />;
+    }
+  };
+
+  const handleDeleteAttachment = (attachmentId: string) => {
+    setShowDeleteAttachmentConfirm(attachmentId);
+  };
+
+  const confirmDeleteAttachment = async (attachmentId: string) => {
+    try {
+      await deleteAttachment(attachmentId);
+      setAttachments(attachments.filter(attachment => attachment.id !== attachmentId));
+      setShowDeleteAttachmentConfirm(null);
+    } catch (error) {
+      console.error("Failed to delete attachment:", error);
+    }
   };
 
   if (isLoading) {
@@ -187,7 +296,37 @@ export default function Editor() {
 
       <div className="p-6 bg-[#1B1F3F] m-4 rounded-lg">
         <h3 className="text-white text-lg font-bold">Attachments</h3>
-        <p className="text-gray-400 text-sm">No attachments added yet.</p>
+        {attachments.length > 0 ? (
+          <div className="mt-4 space-y-3 max-h-[300px] overflow-y-auto pr-2">
+            {attachments.map((attachment) => (
+              <div key={attachment.id} className="bg-[#2A2E52] p-3 rounded-lg flex items-center justify-between">
+                <div className="flex items-center">
+                  {getMediaTypeIcon(attachment.media_type)}
+                  <div className="ml-3">
+                    <span className="text-white font-medium">{attachment.title}</span>
+                    <p className="text-gray-400 text-xs">{attachment.description?.substring(0, 30)}{attachment.description?.length > 30 ? '...' : ''}</p>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={() => handleDeleteAttachment(attachment.id)}
+                    className="bg-[#FF5757] p-2 rounded-full"
+                  >
+                    <FaTrash className="text-white w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => handleEditAttachment(attachment)}
+                    className="bg-[#0073E6] p-2 rounded-full"
+                  >
+                    <FaEdit className="text-white w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-400 text-sm">No attachments added yet.</p>
+        )}
       </div>
 
       <div className="mt-auto p-4 flex justify-between">
@@ -198,6 +337,7 @@ export default function Editor() {
           Exit
         </button>
         <button 
+          onClick={handleNewAttachment}
           className="bg-[#0073E6] text-white px-6 py-3 rounded-lg flex items-center gap-2"
         >
           New Attachment
@@ -228,12 +368,9 @@ export default function Editor() {
               />
             </div>
             
-         
-            <div className="mb-4 flex items-center">
-              <div className="bg-[#2A2E52] text-white p-3 rounded-md w-full flex items-center">
-                <span className="text-blue-400 mr-2">📍</span>
-                <span>todo</span>
-              </div>
+            <div className="bg-[#2A2E52] text-white p-3 rounded-md w-full flex items-center mb-3">
+              <span className="text-blue-400 mr-2">📍</span>
+              <span>todo</span>
             </div>
             
             <div className="mb-4">
@@ -329,6 +466,49 @@ export default function Editor() {
           </div>
         </div>
       )}
+
+      {showAttachmentTypeSelector && (
+        <AttachmentTypeSelector 
+          onClose={() => setShowAttachmentTypeSelector(false)}
+          onContinue={handleAttachmentTypeSelected}
+        />
+      )}
+
+      {showMediaAttachmentCreator && (
+        <MediaAttachmentCreator
+          reportId={reportId}
+          onClose={() => {
+            setShowMediaAttachmentCreator(false);
+            setEditingAttachment(null);
+          }}
+          onComplete={handleAttachmentComplete}
+          existingAttachment={editingAttachment}
+          mediaType={mediaType}
+        />
+      )}
+
+      {showDeleteAttachmentConfirm && (
+        <div className="fixed inset-0 bg-[#1B1F3F]/50 flex items-center justify-center z-50">
+          <div className="bg-[#1B1F3F] p-6 rounded-lg text-center">
+            <p className="text-white text-lg mb-6">Delete this attachment?<br />This cannot be undone.</p>
+            <div className="flex justify-center gap-4">
+              <button 
+                onClick={() => setShowDeleteAttachmentConfirm(null)}
+                className="bg-[#0073E6] text-white px-6 py-3 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => confirmDeleteAttachment(showDeleteAttachmentConfirm)}
+                className="bg-[#FF5757] text-white px-6 py-3 rounded-lg"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
