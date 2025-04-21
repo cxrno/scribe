@@ -10,6 +10,7 @@ import { createEmptyReport, getReports, getRecentTags } from "@/services/reportS
 import { getAttachmentCountsByType } from "@/services/attachmentService";
 import { useEffect, useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import downloadReport from "@/services/downloadReport";
 
 interface Report {
   id: string;
@@ -137,7 +138,7 @@ function TagSearch() {
   );
 }
 
-function ReportCard({ report, onEdit }: { report: Report, onEdit: (id: string) => void }) {
+function ReportCard({ report, onEdit, onDownload }: { report: Report, onEdit: (id: string) => void, onDownload: (id: string) => void }) {
   const date = new Date(report.created_at);
   const formattedDate = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()} ${date.toLocaleTimeString([], {hour: 'numeric', minute:'2-digit', hour12: true})}`;
   const description = report.description.substring(0, 50) + "...";
@@ -184,12 +185,20 @@ function ReportCard({ report, onEdit }: { report: Report, onEdit: (id: string) =
             </div>
           )}
         </div>
+        <div className="flex flex-col gap-2">
         <button 
           onClick={() => onEdit(report.id)}
           className="bg-gray-700 p-2 rounded-full"
         >
           <FaEdit className="text-white" />
         </button>
+        <button 
+          onClick={() => onDownload(report.id)}
+          className="bg-gray-700 p-2 rounded-full"
+        >
+          <FaDownload className="text-white" />
+        </button>
+        </div>
       </div>
     </div>
   );
@@ -241,6 +250,10 @@ export default function Reports() {
     router.push(`/reports/${id}/editor`);
   };
 
+  const handleDownloadReport = (id: string) => {
+    downloadReport(id);
+  };
+
   if(!session) {
     redirect("/");
   }
@@ -262,6 +275,7 @@ export default function Reports() {
                 key={report.id} 
                 report={report} 
                 onEdit={handleEditReport} 
+                onDownload={handleDownloadReport}
               />
             ))
           )}
