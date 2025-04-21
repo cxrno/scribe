@@ -44,6 +44,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (dbUser) {
           session.user.id = dbUser.id
           session.user.name = dbUser.username
+          session.user.image = dbUser.avatar_url
         }
       }
       return session

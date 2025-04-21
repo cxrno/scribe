@@ -58,7 +58,16 @@ export default function Editor() {
         setCreated(created.toLocaleDateString() + " at " + created.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
 
         const tags = await getRecentTags();
-        setRecentTags(tags.filter((tag): tag is string => tag !== null));
+        const removeDups = ( arr: string[]): string[]  => {
+          let unique: string[] = 
+              arr.reduce(function (acc: string[], curr: string) {
+              if (!acc.includes(curr))
+                  acc.push(curr);
+              return acc;
+          }, []);
+          return unique;
+        }
+        setRecentTags(removeDups(tags.filter((tag): tag is string => tag !== null)));
         
         const attachmentsData = await getAttachments(reportId);
         setAttachments(attachmentsData);

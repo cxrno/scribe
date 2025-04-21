@@ -9,6 +9,7 @@ import Image from "next/image";
 import { createEmptyReport, getReports, getRecentTags } from "@/services/reportService";
 import { getAttachmentCountsByType } from "@/services/attachmentService";
 import { useEffect, useState } from "react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 interface Report {
   id: string;
@@ -50,32 +51,57 @@ function NewReportButton() {
   return (
     <button 
       onClick={handleCreateReport}
-      className="bg-[#0073E6] w-20 h-12 flex flex-row items-center justify-center gap-2 rounded-lg"
+      className="bg-[#0073E6] w-50 h-15 mb-4 flex flex-row items-center justify-center gap-2 rounded-lg"
     > 
       <FaPlusCircle className="w-5 h-5" />
-      New
+      New Report
     </button>
   )
 }
+function UserInfoDropDown() {
+  const { data: session } = useSession();
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <button className="flex flex-row items-center gap-2">
+          <Image src={session?.user?.image || ""} alt="User Avatar" width={48} height={48} className="rounded-full" />
+        </button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Content>
+        <DropdownMenu.Item>
+          <SignOutButton />
+        </DropdownMenu.Item>
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
 
+  )
+}
 function ReportsHeader() {
   return (
     <div className="p-6 bg-[#1B1F3F] flex flex-row justify-between">
       <Image src="/logo.png" alt="logo" width={120} height={100} />
       <h1 className="text-white text-2xl text-center mt-2">Reports</h1>
-      <NewReportButton />
+      <UserInfoDropDown />
     </div>
   );
 }
 
 function TagSearch() {
   const [recentTags, setRecentTags] = useState<string[]>([]);
-  
+  const removeDups = ( arr: string[]): string[]  => {
+    let unique: string[] = 
+        arr.reduce(function (acc: string[], curr: string) {
+        if (!acc.includes(curr))
+            acc.push(curr);
+        return acc;
+    }, []);
+    return unique;
+}
   useEffect(() => {
     const fetchTags = async () => {
       try {
         const tags = await getRecentTags();
-        setRecentTags(tags.filter((tag): tag is string => tag !== null));
+        setRecentTags(removeDups(tags.filter((tag): tag is string => tag !== null)));
       } catch (error) {
         console.error("Failed to fetch tags:", error);
       }
@@ -243,7 +269,7 @@ export default function Reports() {
       </div>
       
       <div className="fixed bottom-0 left-0 right-0 bg-[#1B1F3F] p-4 flex justify-center">
-        <SignOutButton />
+        <NewReportButton />
       </div>
     </div>
   );
