@@ -253,25 +253,25 @@ export default function Editor() {
 
   return (
     <div className="flex flex-col h-screen bg-[#121235]">
-      <div className="p-6 bg-[#1B1F3F] flex flex-row justify-between">
-        <Image src="/logo.png" alt="logo" width={120} height={100} />
-        <h1 className="text-white text-2xl text-center mt-2">Report Editor</h1>
+      <div className="p-3 bg-[#1B1F3F] flex flex-row justify-between items-center">
+        <Image src="/logo.png" alt="logo" width={90} height={70} />
+        <h1 className="text-white text-lg text-center">Report Editor</h1>
         <button 
           onClick={handleDelete}
-          className="bg-[#FF5757] w-12 h-12 flex items-center justify-center rounded-lg"
+          className="bg-[#FF5757] w-10 h-10 flex items-center justify-center rounded-lg"
         >
-          <FaTrash className="w-5 h-5 text-white" />
+          <FaTrash className="w-4 h-4 text-white" />
         </button>
       </div>
 
-      <div className="p-6 bg-[#1B1F3F] m-4 rounded-lg">
+      <div className="p-4 bg-[#1B1F3F] m-2 rounded-lg">
         <div className="flex flex-row justify-between items-start">
           <div>
-            <h2 className="text-white text-xl font-bold">{report.title}</h2>
-            <p className="text-gray-400 text-sm">Created {created}</p>
-            <p className="text-gray-400 text-sm">Last updated {lastUpdated}</p>
+            <h2 className="text-white text-lg font-bold">{report.title}</h2>
+            <p className="text-gray-400 text-xs">Created {created}</p>
+            <p className="text-gray-400 text-xs">Last updated {lastUpdated}</p>
             {report.tags.length > 0 ? (
-              <div className="flex flex-row gap-2 mt-2">
+              <div className="flex flex-row flex-wrap gap-1 mt-2">
                 {report.tags.map((tag, index) => (
                   <span key={index} className="bg-blue-500 text-white px-2 py-1 rounded-md text-xs">
                     {tag}
@@ -279,26 +279,26 @@ export default function Editor() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-400 text-sm">No tags added</p>
+              <p className="text-gray-400 text-xs">No tags added</p>
             )}
           </div>
         </div>
 
-        <hr className="my-4 border-gray-700" />
+        <hr className="my-3 border-gray-700" />
 
-        <div className="mt-4">
+        <div className="mt-3">
           {report.description ? (
-            <p className="text-white">{report.description}</p>
+            <p className="text-white text-sm">{report.description}</p>
           ) : (
-            <p className="text-gray-400 italic">No description yet...</p>
+            <p className="text-gray-400 italic text-sm">No description yet...</p>
           )}
         </div>
         
         <button 
-          className="mt-4 bg-gray-700 text-white px-4 py-2 rounded-md flex items-center gap-2"
+          className="mt-3 bg-gray-700 text-white px-3 py-2 rounded-md flex items-center gap-1 text-sm"
           onClick={handleEditClick}
         >
-          <FaPen className="w-4 h-4" />
+          <FaPen className="w-3 h-3" />
           Edit Report Details
         </button>
       </div>
@@ -338,16 +338,16 @@ export default function Editor() {
         )}
       </div>
 
-      <div className="mt-auto p-4 flex justify-between">
+      <div className="mt-auto p-3 flex justify-between">
         <button 
           onClick={handleExit}
-          className="bg-[#1B1F3F] text-white px-6 py-3 rounded-lg flex items-center gap-2"
+          className="bg-[#1B1F3F] text-white px-4 py-2 rounded-lg flex items-center gap-1 text-sm"
         >
           Exit
         </button>
         <button 
           onClick={handleNewAttachment}
-          className="bg-[#0073E6] text-white px-6 py-3 rounded-lg flex items-center gap-2"
+          className="bg-[#0073E6] text-white px-4 py-2 rounded-lg flex items-center gap-1 text-sm"
         >
           New Attachment
         </button>
