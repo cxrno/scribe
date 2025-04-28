@@ -252,7 +252,7 @@ export default function Editor() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#121235] overflow-hidden">
+    <div className="fixed inset-0 flex flex-col bg-[#121235] overflow-hidden">
       <div className="p-3 bg-[#1B1F3F] flex flex-row justify-between items-center z-10">
         <Image src="/logo.png" alt="logo" width={90} height={70} />
         <h1 className="text-white text-lg text-center">Report Editor</h1>
@@ -264,7 +264,7 @@ export default function Editor() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-[70px]">
+      <div className="absolute top-[76px] bottom-[64px] left-0 right-0 overflow-y-auto">
         <div className="p-4 bg-[#1B1F3F] m-2 rounded-lg">
           <div className="flex flex-row justify-between items-start">
             <div>
@@ -338,8 +338,6 @@ export default function Editor() {
             <p className="text-gray-400 text-sm mt-2">No attachments added yet.</p>
           )}
         </div>
-        
-        <div className="h-16"></div>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 p-3 flex justify-between bg-[#1B1F3F] shadow-lg z-10">
