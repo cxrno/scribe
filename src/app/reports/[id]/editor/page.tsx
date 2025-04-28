@@ -252,8 +252,8 @@ export default function Editor() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#121235]">
-      <div className="p-3 bg-[#1B1F3F] flex flex-row justify-between items-center">
+    <div className="flex flex-col h-screen bg-[#121235] overflow-hidden">
+      <div className="p-3 bg-[#1B1F3F] flex flex-row justify-between items-center z-10">
         <Image src="/logo.png" alt="logo" width={90} height={70} />
         <h1 className="text-white text-lg text-center">Report Editor</h1>
         <button 
@@ -304,10 +304,10 @@ export default function Editor() {
           </button>
         </div>
 
-        <div className="p-6 bg-[#1B1F3F] m-4 rounded-lg">
+        <div className="p-4 bg-[#1B1F3F] m-2 rounded-lg">
           <h3 className="text-white text-lg font-bold">Attachments</h3>
           {attachments.length > 0 ? (
-            <div className="mt-4 space-y-3 max-h-[300px] overflow-y-auto pr-2">
+            <div className="mt-4 space-y-3">
               {attachments.map((attachment) => (
                 <div key={attachment.id} className="bg-[#2A2E52] p-3 rounded-lg flex items-center justify-between">
                   <div className="flex items-center">
@@ -335,12 +335,14 @@ export default function Editor() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-400 text-sm">No attachments added yet.</p>
+            <p className="text-gray-400 text-sm mt-2">No attachments added yet.</p>
           )}
         </div>
+        
+        <div className="h-16"></div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-3 flex justify-between bg-[#1B1F3F] shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 p-3 flex justify-between bg-[#1B1F3F] shadow-lg z-10">
         <button 
           onClick={handleExit}
           className="bg-[#2A2E52] text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
