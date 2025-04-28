@@ -23,7 +23,6 @@ export default async function downloadReport(reportId: string) {
     
     doc.setFontSize(20);
     doc.text(`Report: ${report.title || "Untitled"}`, 14, 20);
-    doc.text('Report created by: ' , 14, 26);
 
     doc.setFontSize(12);
     doc.text(`Report ID: ${report.id}`, 14, 30);
