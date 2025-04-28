@@ -52,7 +52,7 @@ function NewReportButton() {
   return (
     <button 
       onClick={handleCreateReport}
-      className="bg-[#0073E6] w-50 h-15 mb-4 flex flex-row items-center justify-center gap-2 rounded-lg"
+      className="bg-[#0073E6] w-50 h-15 flex flex-row items-center justify-center gap-2 rounded-lg"
     > 
       <FaPlusCircle className="w-5 h-5" />
       New Report
@@ -79,9 +79,9 @@ function UserInfoDropDown() {
 }
 function ReportsHeader() {
   return (
-    <div className="p-6 bg-[#1B1F3F] flex flex-row justify-between">
-      <Image src="/logo.png" alt="logo" width={120} height={100} />
-      <h1 className="text-white text-2xl text-center mt-2">Reports</h1>
+    <div className="p-4 bg-[#1B1F3F] flex flex-row justify-between items-center fixed top-0 left-0 right-0 z-10">
+      <Image src="/logo.png" alt="logo" width={100} height={80} />
+      <h1 className="text-white text-xl text-center">Reports</h1>
       <UserInfoDropDown />
     </div>
   );
@@ -112,15 +112,15 @@ function TagSearch() {
   }, []);
   
   return (
-    <div className="px-4 py-3 bg-[#1B1F3F] rounded-lg m-4">
+    <div className="px-3 py-2 bg-[#1B1F3F] rounded-lg mx-3 my-2">
       <input 
         type="text" 
-        className="w-full bg-[#2d3363] text-white rounded-lg p-3" 
+        className="w-full bg-[#2d3363] text-white rounded-lg p-2 text-sm" 
         placeholder="Search by tag" 
       />
       <div className="mt-2">
-        <p className="text-gray-300 text-sm mb-1">Previously used</p>
-        <div className="flex flex-wrap gap-2">
+        <p className="text-gray-300 text-xs mb-1">Previously used</p>
+        <div className="flex flex-wrap gap-1">
           {recentTags.map((tag, index) => (
             <button 
               key={index} 
@@ -261,10 +261,10 @@ export default function Reports() {
   return (
     <div className="flex flex-col h-screen">
       <ReportsHeader />
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden pt-[88px]">
         <TagSearch />
         
-        <div className="px-4 pb-20 overflow-y-auto h-[calc(100vh-250px)]">
+        <div className="px-3 pb-20 overflow-y-auto h-[calc(100vh-230px)]">
           {isLoading ? (
             <p className="text-white text-center mt-8">Loading reports...</p>
           ) : reports.length === 0 ? (
@@ -282,7 +282,7 @@ export default function Reports() {
         </div>
       </div>
       
-      <div className="fixed bottom-0 left-0 right-0 bg-[#1B1F3F] p-4 flex justify-center">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#1B1F3F] p-3 flex justify-center">
         <NewReportButton />
       </div>
     </div>

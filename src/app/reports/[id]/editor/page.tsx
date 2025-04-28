@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { getReport, discardEmptyReport, updateReport, deleteReport, getRecentTags } from "@/services/reportService";
 import { getAttachments, deleteAttachment } from "@/services/attachmentService";
-import { FaTrash, FaPen, FaImage, FaVideo, FaMicrophone, FaPaintBrush, FaFileAlt, FaEdit, FaCheckCircle } from "react-icons/fa";
+import { FaTrash, FaPen, FaImage, FaVideo, FaMicrophone, FaPaintBrush, FaFileAlt, FaEdit, FaCheckCircle, FaPlus, FaArrowLeft } from "react-icons/fa";
 import AttachmentTypeSelector from "@/app/components/AttachmentTypeSelector";
 import MediaAttachmentCreator from "@/app/components/MediaAttachmentCreator";
 
@@ -259,103 +259,107 @@ export default function Editor() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#121235]">
-      <div className="p-6 bg-[#1B1F3F] flex flex-row justify-between">
-        <Image src="/logo.png" alt="logo" width={120} height={100} />
-        <h1 className="text-white text-2xl text-center mt-2">Report Editor</h1>
+    <div className="fixed inset-0 flex flex-col bg-[#121235] overflow-hidden">
+      <div className="p-3 bg-[#1B1F3F] flex flex-row justify-between items-center z-10">
+        <Image src="/logo.png" alt="logo" width={90} height={70} />
+        <h1 className="text-white text-lg text-center">Report Editor</h1>
         <button 
           onClick={handleDelete}
-          className="bg-[#FF5757] w-12 h-12 flex items-center justify-center rounded-lg"
+          className="bg-[#FF5757] w-10 h-10 flex items-center justify-center rounded-lg"
         >
-          <FaTrash className="w-5 h-5 text-white" />
+          <FaTrash className="w-4 h-4 text-white" />
         </button>
       </div>
 
-      <div className="p-6 bg-[#1B1F3F] m-4 rounded-lg">
-        <div className="flex flex-row justify-between items-start">
-          <div>
-            <h2 className="text-white text-xl font-bold">{report.title}</h2>
-            <p className="text-gray-400 text-sm">Created {created}</p>
-            <p className="text-gray-400 text-sm">Last updated {lastUpdated}</p>
-            {report.tags.length > 0 ? (
-              <div className="flex flex-row gap-2 mt-2">
-                {report.tags.map((tag, index) => (
-                  <span key={index} className="bg-blue-500 text-white px-2 py-1 rounded-md text-xs">
-                    {tag}
-                  </span>
-                ))}
-              </div>
+      <div className="absolute top-[76px] bottom-[64px] left-0 right-0 overflow-y-auto">
+        <div className="p-4 bg-[#1B1F3F] m-2 rounded-lg">
+          <div className="flex flex-row justify-between items-start">
+            <div>
+              <h2 className="text-white text-lg font-bold">{report.title}</h2>
+              <p className="text-gray-400 text-xs">Created {created}</p>
+              <p className="text-gray-400 text-xs">Last updated {lastUpdated}</p>
+              {report.tags.length > 0 ? (
+                <div className="flex flex-row flex-wrap gap-1 mt-2">
+                  {report.tags.map((tag, index) => (
+                    <span key={index} className="bg-blue-500 text-white px-2 py-1 rounded-md text-xs">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-xs">No tags added</p>
+              )}
+            </div>
+          </div>
+
+          <hr className="my-3 border-gray-700" />
+
+          <div className="mt-3">
+            {report.description ? (
+              <p className="text-white text-sm">{report.description}</p>
             ) : (
-              <p className="text-gray-400 text-sm">No tags added</p>
+              <p className="text-gray-400 italic text-sm">No description yet...</p>
             )}
           </div>
+          
+          <button 
+            className="mt-3 bg-gray-700 text-white px-3 py-2 rounded-md flex items-center gap-1 text-sm"
+            onClick={handleEditClick}
+          >
+            <FaPen className="w-3 h-3" />
+            Edit Report Details
+          </button>
         </div>
 
-        <hr className="my-4 border-gray-700" />
-
-        <div className="mt-4">
-          {report.description ? (
-            <p className="text-white">{report.description}</p>
-          ) : (
-            <p className="text-gray-400 italic">No description yet...</p>
-          )}
-        </div>
-        
-        <button 
-          className="mt-4 bg-gray-700 text-white px-4 py-2 rounded-md flex items-center gap-2"
-          onClick={handleEditClick}
-        >
-          <FaPen className="w-4 h-4" />
-          Edit Report Details
-        </button>
-      </div>
-
-      <div className="p-6 bg-[#1B1F3F] m-4 rounded-lg">
-        <h3 className="text-white text-lg font-bold">Attachments</h3>
-        {attachments.length > 0 ? (
-          <div className="mt-4 space-y-3 max-h-[300px] overflow-y-auto pr-2">
-            {attachments.map((attachment) => (
-              <div key={attachment.id} className="bg-[#2A2E52] p-3 rounded-lg flex items-center justify-between">
-                <div className="flex items-center">
-                  {getMediaTypeIcon(attachment.media_type)}
-                  <div className="ml-3">
-                    <span className="text-white font-medium">{attachment.title}</span>
-                    <p className="text-gray-400 text-xs">{attachment.description?.substring(0, 30)}{attachment.description?.length > 30 ? '...' : ''}</p>
+        <div className="p-4 bg-[#1B1F3F] m-2 rounded-lg">
+          <h3 className="text-white text-lg font-bold">Attachments</h3>
+          {attachments.length > 0 ? (
+            <div className="mt-4 space-y-3">
+              {attachments.map((attachment) => (
+                <div key={attachment.id} className="bg-[#2A2E52] p-3 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center">
+                    {getMediaTypeIcon(attachment.media_type)}
+                    <div className="ml-3">
+                      <span className="text-white font-medium">{attachment.title}</span>
+                      <p className="text-gray-400 text-xs">{attachment.description?.substring(0, 30)}{attachment.description?.length > 30 ? '...' : ''}</p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button 
+                      onClick={() => handleDeleteAttachment(attachment.id)}
+                      className="bg-[#FF5757] p-2 rounded-full"
+                    >
+                      <FaTrash className="text-white w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleEditAttachment(attachment)}
+                      className="bg-[#0073E6] p-2 rounded-full"
+                    >
+                      <FaEdit className="text-white w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex space-x-2">
-                  <button 
-                    onClick={() => handleDeleteAttachment(attachment.id)}
-                    className="bg-[#FF5757] p-2 rounded-full"
-                  >
-                    <FaTrash className="text-white w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => handleEditAttachment(attachment)}
-                    className="bg-[#0073E6] p-2 rounded-full"
-                  >
-                    <FaEdit className="text-white w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-400 text-sm">No attachments added yet.</p>
-        )}
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-400 text-sm mt-2">No attachments added yet.</p>
+          )}
+        </div>
       </div>
 
-      <div className="mt-auto p-4 flex justify-between">
+      <div className="fixed bottom-0 left-0 right-0 p-3 flex justify-between bg-[#1B1F3F] shadow-lg z-10">
         <button 
           onClick={handleExit}
-          className="bg-[#1B1F3F] text-white px-6 py-3 rounded-lg flex items-center gap-2"
+          className="bg-[#2A2E52] text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
         >
+          <FaArrowLeft className="w-4 h-4" />
           Exit
         </button>
         <button 
           onClick={handleNewAttachment}
-          className="bg-[#0073E6] text-white px-6 py-3 rounded-lg flex items-center gap-2"
+          className="bg-[#0073E6] text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
         >
+          <FaPlus className="w-4 h-4" />
           New Attachment
         </button>
       </div>

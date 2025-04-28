@@ -417,25 +417,25 @@ export default function MediaAttachmentCreator({
 
   return (
     <div className="fixed inset-0 bg-[#1B1F3F] flex flex-col z-50">
-      <div className="p-4 bg-[#2A2E52] flex items-center justify-center">
-        <h2 className="text-white text-xl font-bold">
+      <div className="p-3 bg-[#2A2E52] flex items-center justify-center">
+        <h2 className="text-white text-lg font-bold">
           {isEditing ? `Edit ${getMediaTypeLabel()}` : `New ${getMediaTypeLabel()}`}
         </h2>
       </div>
       
-      <div className="p-4 flex-1 flex flex-col">
+      <div className="p-3 flex-1 flex flex-col overflow-y-auto">
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full bg-[#2A2E52] text-white p-3 rounded-md mb-4"
+          className="w-full bg-[#2A2E52] text-white p-2 rounded-md mb-3 text-sm"
           placeholder="Title"
         />
         
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full bg-[#2A2E52] text-white p-3 rounded-md mb-4 h-40"
+          className="w-full bg-[#2A2E52] text-white p-2 rounded-md mb-3 h-24 text-sm"
           placeholder={`Description (e.g., ${getMediaTypeLabel()} of vehicle damage)`}
         />
         
@@ -448,19 +448,19 @@ export default function MediaAttachmentCreator({
               : renderMediaSelector()}
       </div>
       
-      <div className="p-4 flex justify-center gap-2 bg-[#2A2E52]">
+      <div className="p-3 flex justify-center gap-2 bg-[#2A2E52]">
         <button 
           onClick={onClose}
-          className="text-white p-3 rounded-full"
+          className="text-white p-2 rounded-full text-sm"
         >
           Exit
         </button>
         <button 
           onClick={handleComplete}
           disabled={(isEditing ? false : (!selectedFile && mediaType !== 'sketch' && mediaType !== 'document')) || isUploading}
-          className={`bg-blue-500 text-white px-6 py-3 rounded-lg flex items-center gap-2 ${((isEditing ? false : (!selectedFile && mediaType !== 'sketch' && mediaType !== 'document')) || isUploading) ? 'opacity-50 cursor-not-allowed' : ''}`}
+          className={`bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-1 text-sm ${((isEditing ? false : (!selectedFile && mediaType !== 'sketch' && mediaType !== 'document')) || isUploading) ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          <FaCheck />
+          <FaCheck className="w-3 h-3" />
           Complete
         </button>
       </div>
