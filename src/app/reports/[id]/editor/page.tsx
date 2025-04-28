@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { getReport, discardEmptyReport, updateReport, deleteReport, getRecentTags } from "@/services/reportService";
 import { getAttachments, deleteAttachment } from "@/services/attachmentService";
-import { FaTrash, FaPen, FaImage, FaVideo, FaMicrophone, FaPaintBrush, FaFileAlt, FaEdit } from "react-icons/fa";
+import { FaTrash, FaPen, FaImage, FaVideo, FaMicrophone, FaPaintBrush, FaFileAlt, FaEdit, FaCheckCircle } from "react-icons/fa";
 import AttachmentTypeSelector from "@/app/components/AttachmentTypeSelector";
 import MediaAttachmentCreator from "@/app/components/MediaAttachmentCreator";
 
@@ -37,7 +37,7 @@ export default function Editor() {
   const [mediaType, setMediaType] = useState<'picture' | 'video' | 'sketch' | 'document' | 'audio'>('picture');
 
   const [showDeleteAttachmentConfirm, setShowDeleteAttachmentConfirm] = useState<string | null>(null);
-
+  const [showDeletionError, setShowDeletionError] = useState(false);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -98,7 +98,7 @@ export default function Editor() {
   const handleDelete = async () => {
     const isEmpty = report.title === "Untitled Report" && 
                    report.description === "No description" && 
-                   report.tags.length === 0;
+                   report.tags.length === 0 && attachments.length === 0;
     
     if (isEmpty) {
       try {
@@ -109,18 +109,25 @@ export default function Editor() {
         navigateToReports();
       }
     } else {
-      setShowDeleteConfirm(true);
+      if(attachments.length > 0)
+        setShowDeletionError(true);
+      else
+        setShowDeleteConfirm(true);
     }
   };
 
   const confirmDelete = async () => {
-    try {
-      await deleteReport(reportId);
-      navigateToReports();
-    } catch (error) {
-      console.error("Failed to delete report:", error);
+    if(attachments.length === 0)
+      setShowDeletionError(true);
+    else {
+      try {
+        await deleteReport(reportId);
+        navigateToReports();
+      } catch (error) {
+        console.error("Failed to delete report:", error);
+      }
+      setShowDeleteConfirm(false);
     }
-    setShowDeleteConfirm(false);
   };
 
   const handleEditClick = () => {
@@ -453,8 +460,24 @@ export default function Editor() {
           </div>
         </div>
       )}
+      {showDeletionError && (
+        <div className="fixed inset-0 bg-[#1B1F3F]/50 flex items-center justify-center z-50">
+        <div className="bg-[#1B1F3F] p-6 rounded-lg text-center">
+          <p className="text-white text-lg mb-6">Error deleting report<br />You must delete all attachments first.</p>
+          <div className="flex justify-center gap-4">
+            <button 
+              onClick={() => setShowDeletionError(false)}
+              className="bg-[#0073E6] text-white px-6 py-3 rounded-lg"
+            >
+              <FaCheckCircle ></FaCheckCircle>
+            </button>
+          </div>
+        </div>
+      </div>
+      )}
 
-      {showDeleteConfirm && (
+      {showDeleteConfirm &&
+      (
         <div className="fixed inset-0 bg-[#1B1F3F]/50 flex items-center justify-center z-50">
           <div className="bg-[#1B1F3F] p-6 rounded-lg text-center">
             <p className="text-white text-lg mb-6">Please confirm deletion.<br />This cannot be undone.</p>
