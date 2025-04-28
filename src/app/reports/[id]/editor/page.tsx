@@ -5,7 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import { getReport, discardEmptyReport, updateReport, deleteReport, getRecentTags } from "@/services/reportService";
 import { getAttachments, deleteAttachment } from "@/services/attachmentService";
-import { FaTrash, FaPen, FaImage, FaVideo, FaMicrophone, FaPaintBrush, FaFileAlt, FaEdit } from "react-icons/fa";
+import { FaTrash, FaPen, FaImage, FaVideo, FaMicrophone, FaPaintBrush, FaFileAlt, FaEdit, FaPlus, FaArrowLeft } from "react-icons/fa";
 import AttachmentTypeSelector from "@/app/components/AttachmentTypeSelector";
 import MediaAttachmentCreator from "@/app/components/MediaAttachmentCreator";
 
@@ -264,91 +264,95 @@ export default function Editor() {
         </button>
       </div>
 
-      <div className="p-4 bg-[#1B1F3F] m-2 rounded-lg">
-        <div className="flex flex-row justify-between items-start">
-          <div>
-            <h2 className="text-white text-lg font-bold">{report.title}</h2>
-            <p className="text-gray-400 text-xs">Created {created}</p>
-            <p className="text-gray-400 text-xs">Last updated {lastUpdated}</p>
-            {report.tags.length > 0 ? (
-              <div className="flex flex-row flex-wrap gap-1 mt-2">
-                {report.tags.map((tag, index) => (
-                  <span key={index} className="bg-blue-500 text-white px-2 py-1 rounded-md text-xs">
-                    {tag}
-                  </span>
-                ))}
-              </div>
+      <div className="flex-1 overflow-y-auto pb-[70px]">
+        <div className="p-4 bg-[#1B1F3F] m-2 rounded-lg">
+          <div className="flex flex-row justify-between items-start">
+            <div>
+              <h2 className="text-white text-lg font-bold">{report.title}</h2>
+              <p className="text-gray-400 text-xs">Created {created}</p>
+              <p className="text-gray-400 text-xs">Last updated {lastUpdated}</p>
+              {report.tags.length > 0 ? (
+                <div className="flex flex-row flex-wrap gap-1 mt-2">
+                  {report.tags.map((tag, index) => (
+                    <span key={index} className="bg-blue-500 text-white px-2 py-1 rounded-md text-xs">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-xs">No tags added</p>
+              )}
+            </div>
+          </div>
+
+          <hr className="my-3 border-gray-700" />
+
+          <div className="mt-3">
+            {report.description ? (
+              <p className="text-white text-sm">{report.description}</p>
             ) : (
-              <p className="text-gray-400 text-xs">No tags added</p>
+              <p className="text-gray-400 italic text-sm">No description yet...</p>
             )}
           </div>
+          
+          <button 
+            className="mt-3 bg-gray-700 text-white px-3 py-2 rounded-md flex items-center gap-1 text-sm"
+            onClick={handleEditClick}
+          >
+            <FaPen className="w-3 h-3" />
+            Edit Report Details
+          </button>
         </div>
 
-        <hr className="my-3 border-gray-700" />
-
-        <div className="mt-3">
-          {report.description ? (
-            <p className="text-white text-sm">{report.description}</p>
-          ) : (
-            <p className="text-gray-400 italic text-sm">No description yet...</p>
-          )}
-        </div>
-        
-        <button 
-          className="mt-3 bg-gray-700 text-white px-3 py-2 rounded-md flex items-center gap-1 text-sm"
-          onClick={handleEditClick}
-        >
-          <FaPen className="w-3 h-3" />
-          Edit Report Details
-        </button>
-      </div>
-
-      <div className="p-6 bg-[#1B1F3F] m-4 rounded-lg">
-        <h3 className="text-white text-lg font-bold">Attachments</h3>
-        {attachments.length > 0 ? (
-          <div className="mt-4 space-y-3 max-h-[300px] overflow-y-auto pr-2">
-            {attachments.map((attachment) => (
-              <div key={attachment.id} className="bg-[#2A2E52] p-3 rounded-lg flex items-center justify-between">
-                <div className="flex items-center">
-                  {getMediaTypeIcon(attachment.media_type)}
-                  <div className="ml-3">
-                    <span className="text-white font-medium">{attachment.title}</span>
-                    <p className="text-gray-400 text-xs">{attachment.description?.substring(0, 30)}{attachment.description?.length > 30 ? '...' : ''}</p>
+        <div className="p-6 bg-[#1B1F3F] m-4 rounded-lg">
+          <h3 className="text-white text-lg font-bold">Attachments</h3>
+          {attachments.length > 0 ? (
+            <div className="mt-4 space-y-3 max-h-[300px] overflow-y-auto pr-2">
+              {attachments.map((attachment) => (
+                <div key={attachment.id} className="bg-[#2A2E52] p-3 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center">
+                    {getMediaTypeIcon(attachment.media_type)}
+                    <div className="ml-3">
+                      <span className="text-white font-medium">{attachment.title}</span>
+                      <p className="text-gray-400 text-xs">{attachment.description?.substring(0, 30)}{attachment.description?.length > 30 ? '...' : ''}</p>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button 
+                      onClick={() => handleDeleteAttachment(attachment.id)}
+                      className="bg-[#FF5757] p-2 rounded-full"
+                    >
+                      <FaTrash className="text-white w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleEditAttachment(attachment)}
+                      className="bg-[#0073E6] p-2 rounded-full"
+                    >
+                      <FaEdit className="text-white w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-                <div className="flex space-x-2">
-                  <button 
-                    onClick={() => handleDeleteAttachment(attachment.id)}
-                    className="bg-[#FF5757] p-2 rounded-full"
-                  >
-                    <FaTrash className="text-white w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => handleEditAttachment(attachment)}
-                    className="bg-[#0073E6] p-2 rounded-full"
-                  >
-                    <FaEdit className="text-white w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-400 text-sm">No attachments added yet.</p>
-        )}
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-400 text-sm">No attachments added yet.</p>
+          )}
+        </div>
       </div>
 
-      <div className="mt-auto p-3 flex justify-between">
+      <div className="fixed bottom-0 left-0 right-0 p-3 flex justify-between bg-[#1B1F3F] shadow-lg">
         <button 
           onClick={handleExit}
-          className="bg-[#1B1F3F] text-white px-4 py-2 rounded-lg flex items-center gap-1 text-sm"
+          className="bg-[#2A2E52] text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
         >
+          <FaArrowLeft className="w-4 h-4" />
           Exit
         </button>
         <button 
           onClick={handleNewAttachment}
-          className="bg-[#0073E6] text-white px-4 py-2 rounded-lg flex items-center gap-1 text-sm"
+          className="bg-[#0073E6] text-white px-4 py-2 rounded-lg flex items-center gap-2 text-sm"
         >
+          <FaPlus className="w-4 h-4" />
           New Attachment
         </button>
       </div>

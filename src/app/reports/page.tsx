@@ -52,7 +52,7 @@ function NewReportButton() {
   return (
     <button 
       onClick={handleCreateReport}
-      className="bg-[#0073E6] w-50 h-15 mb-4 flex flex-row items-center justify-center gap-2 rounded-lg"
+      className="bg-[#0073E6] w-50 h-15 flex flex-row items-center justify-center gap-2 rounded-lg"
     > 
       <FaPlusCircle className="w-5 h-5" />
       New Report
@@ -79,7 +79,7 @@ function UserInfoDropDown() {
 }
 function ReportsHeader() {
   return (
-    <div className="p-4 bg-[#1B1F3F] flex flex-row justify-between items-center">
+    <div className="p-4 bg-[#1B1F3F] flex flex-row justify-between items-center fixed top-0 left-0 right-0 z-10">
       <Image src="/logo.png" alt="logo" width={100} height={80} />
       <h1 className="text-white text-xl text-center">Reports</h1>
       <UserInfoDropDown />
@@ -261,7 +261,7 @@ export default function Reports() {
   return (
     <div className="flex flex-col h-screen">
       <ReportsHeader />
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden pt-[88px]">
         <TagSearch />
         
         <div className="px-3 pb-20 overflow-y-auto h-[calc(100vh-230px)]">
