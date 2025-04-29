@@ -117,7 +117,7 @@ export default function Editor() {
   };
 
   const confirmDelete = async () => {
-    if(attachments.length === 0)
+    if(attachments.length > 0)
       setShowDeletionError(true);
     else {
       try {
@@ -376,6 +376,11 @@ export default function Editor() {
                 onChange={(e) => setEditedReport({...editedReport, title: e.target.value})}
                 className="w-full bg-[#2A2E52] text-white p-3 rounded-md"
                 placeholder="Case #12345"
+                onFocus={() => {
+                  if (editedReport.title === "Untitled Report") {
+                    setEditedReport({...editedReport, title: ""});
+                  }
+                }}
               />
             </div>
             
@@ -385,6 +390,11 @@ export default function Editor() {
                 onChange={(e) => setEditedReport({...editedReport, description: e.target.value})}
                 className="w-full bg-[#2A2E52] text-white p-3 rounded-md min-h-[100px]"
                 placeholder="Description"
+                onFocus={() => {
+                  if (editedReport.description === "No description") {
+                    setEditedReport({...editedReport, description: ""});
+                  }
+                }}
               />
             </div>
             
