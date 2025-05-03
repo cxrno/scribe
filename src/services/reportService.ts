@@ -72,6 +72,7 @@ export async function getReport(reportId: string) {
         title: report.title,
         description: report.description,
         user_id: report.user_id,
+        location: report.location,
         created_at: report.created_at,
         updated_at: report.updated_at,
         tags: report.tags,
@@ -99,7 +100,7 @@ export async function getReports() {
     }));
 }
 
-export async function createEmptyReport() {
+export async function createEmptyReport(location?: string) {
     const session = await auth();
     if (!session?.user?.id) {
         throw new Error("Unauthorized");
@@ -112,6 +113,7 @@ export async function createEmptyReport() {
         created_at: new Date(),
         updated_at: new Date(),
         tags: [],
+        location: location || null,
     }).returning({ id: reports.id });
     
     return result[0].id;

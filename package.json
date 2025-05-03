@@ -7,8 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:generate": "drizzle-kit generate --dialect=postgresql --schema=src/db/schema.ts --out=./drizzle",
-    "db:migrate": "tsx ./src/db/migrate.ts"
+    "db:generate": "drizzle-kit generate --dialect=postgresql --schema=src/app/db/schema.ts --out=./drizzle",
+    "db:migrate": "tsx ./src/app/db/migrate.ts"
   },
   "dependencies": {
     "@auth/core": "^0.38.0",

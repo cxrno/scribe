@@ -1,0 +1,1 @@
+ALTER TABLE "reports" ALTER COLUMN "location" SET DATA TYPE text;

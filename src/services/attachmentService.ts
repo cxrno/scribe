@@ -36,7 +36,7 @@ async function verifyUserOwnership(attachmentId: string) {
     return true;
 }
 
-export async function createAttachment(reportId: string, file: File | null, mediaTypeValue: typeof mediaType.enumValues[number], title?: string, description?: string) {
+export async function createAttachment(reportId: string, file: File | null, mediaTypeValue: typeof mediaType.enumValues[number], title?: string, description?: string, location?: string) {
     const session = await auth();
     if (!session?.user?.id)
         throw new Error("Unauthorized");
@@ -67,7 +67,7 @@ export async function createAttachment(reportId: string, file: File | null, medi
         title: title || "Untitled Attachment",
         description: description || "No description",
         media_url: mediaUrl || "null",
-        location: null,
+        location: location || null,
         metadata: null,
         created_at: new Date(),
         updated_at: new Date(),

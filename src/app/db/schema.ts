@@ -19,7 +19,7 @@ export const reports = pgTable('reports', {
     title: text('title'),
     description: text('description'),
     tags: text('tags').array(),
-    location: point('location'),
+    location: text('location'),
     created_at: timestamp('created_at').defaultNow().notNull(),
     updated_at: timestamp('updated_at').defaultNow().notNull(),
 })
@@ -31,7 +31,7 @@ export const attachments = pgTable('attachments', {
     title: text('title'),
     description: text('description'),
     media_url: text('media_url').notNull(),
-    location: point('location'),
+    location: text('location'),
     metadata: json('metadata'),
     created_at: timestamp('created_at').defaultNow().notNull(),
     updated_at: timestamp('updated_at').defaultNow().notNull(),

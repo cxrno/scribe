@@ -29,15 +29,23 @@ export default async function downloadReport(reportId: string) {
     doc.text(`Created: ${new Date(report.created_at).toLocaleString()}`, 14, 36);
     doc.text(`Updated: ${new Date(report.updated_at).toLocaleString()}`, 14, 42);
     
+    let yPosition = 48;
+    
     if (report.tags && report.tags.length > 0) {
-      doc.text(`Tags: ${report.tags.join(', ')}`, 14, 48);
+      doc.text(`Tags: ${report.tags.join(', ')}`, 14, yPosition);
+      yPosition += 6;
     }
     
-    doc.text('Description:', 14, 56);
-    const splitDescription = doc.splitTextToSize(report.description || "No description", 180);
-    doc.text(splitDescription, 14, 62);
+    if (report.location) {
+      doc.text(`Location: ${report.location}`, 14, yPosition);
+      yPosition += 6;
+    }
     
-    let yPosition = 62 + (splitDescription.length * 6);
+    doc.text('Description:', 14, yPosition);
+    const splitDescription = doc.splitTextToSize(report.description || "No description", 180);
+    doc.text(splitDescription, 14, yPosition + 6);
+    
+    yPosition = yPosition + 6 + (splitDescription.length * 6);
     
     if (attachments && attachments.length > 0) {
       yPosition += 10;
@@ -66,6 +74,11 @@ export default async function downloadReport(reportId: string) {
         yPosition += 5;
         doc.text(`Type: ${attachment.media_type}`, 14, yPosition);
         yPosition += 5;
+        
+        if (attachment.location) {
+          doc.text(`Location: ${attachment.location}`, 14, yPosition);
+          yPosition += 5;
+        }
         
         let textHeight = 16;
         

@@ -39,26 +39,51 @@ function NumberedAttachments({ icon: Icon, number }: { icon: IconType, number: n
 
 function NewReportButton() {
   const router = useRouter();
+  const [isCreating, setIsCreating] = useState(false);
   
   const handleCreateReport = async () => {
     try {
-      const reportId = await createEmptyReport();
+      setIsCreating(true);
+      
+      let location: string | undefined = undefined;
+      
+      if (navigator.geolocation) {
+        try {
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              timeout: 5000,
+              maximumAge: 0
+            });
+          });
+          
+          const { latitude, longitude } = position.coords;
+          location = `${latitude},${longitude}`;
+        } catch (error) {
+          console.error("Error getting location:", error);
+        }
+      }
+      
+      const reportId = await createEmptyReport(location);
       router.push(`/reports/${reportId}/editor`);
     } catch (error) {
       console.error("Failed to create report:", error);
+    } finally {
+      setIsCreating(false);
     }
   };
   
   return (
     <button 
       onClick={handleCreateReport}
-      className="bg-[#0073E6] w-50 h-15 flex flex-row items-center justify-center gap-2 rounded-lg"
+      disabled={isCreating}
+      className={`bg-[#0073E6] w-50 h-15 flex flex-row items-center justify-center gap-2 rounded-lg ${isCreating ? 'opacity-70' : ''}`}
     > 
       <FaPlusCircle className="w-5 h-5" />
-      New Report
+      {isCreating ? "Creating..." : "New Report"}
     </button>
   )
 }
+
 function UserInfoDropDown() {
   const { data: session } = useSession();
   return (
@@ -87,9 +112,10 @@ function ReportsHeader() {
   );
 }
 
-function TagSearch() {
+function TagSearch({ searchTag, setSearchTag }: { searchTag: string, setSearchTag: (tag: string) => void }) {
   const [recentTags, setRecentTags] = useState<string[]>([]);
-  const removeDups = ( arr: string[]): string[]  => {
+  
+  const removeDups = (arr: string[]): string[] => {
     let unique: string[] = 
         arr.reduce(function (acc: string[], curr: string) {
         if (!acc.includes(curr))
@@ -97,7 +123,8 @@ function TagSearch() {
         return acc;
     }, []);
     return unique;
-}
+  }
+  
   useEffect(() => {
     const fetchTags = async () => {
       try {
@@ -111,12 +138,22 @@ function TagSearch() {
     fetchTags();
   }, []);
   
+  const handleTagClick = (tag: string) => {
+    if (searchTag === tag) {
+      setSearchTag("");
+    } else {
+      setSearchTag(tag);
+    }
+  };
+  
   return (
     <div className="px-3 py-2 bg-[#1B1F3F] rounded-lg mx-3 my-2">
       <input 
         type="text" 
         className="w-full bg-[#2d3363] text-white rounded-lg p-2 text-sm" 
         placeholder="Search by tag" 
+        value={searchTag}
+        onChange={(e) => setSearchTag(e.target.value)}
       />
       <div className="mt-2">
         <p className="text-gray-300 text-xs mb-1">Previously used</p>
@@ -124,10 +161,8 @@ function TagSearch() {
           {recentTags.map((tag, index) => (
             <button 
               key={index} 
-              className="bg-blue-500 text-white px-2 py-1 rounded-md text-xs cursor-pointer"
-              onClick={() => {
-                console.log(tag); //TODO: Implement tag search
-              }}
+              className={`${searchTag === tag ? 'bg-blue-700' : 'bg-blue-500'} text-white px-2 py-1 rounded-md text-xs cursor-pointer`}
+              onClick={() => handleTagClick(tag)}
             >
               {tag}
             </button>
@@ -208,6 +243,7 @@ export default function Reports() {
   const { data: session } = useSession();
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchTag, setSearchTag] = useState<string>("");
   const router = useRouter();
 
   useEffect(() => {
@@ -235,7 +271,11 @@ export default function Reports() {
           })
         );
         
-        setReports(reportsWithAttachments);
+        const sortedReports = reportsWithAttachments.sort((a, b) => {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+        
+        setReports(sortedReports);
       } catch (error) {
         console.error("Failed to fetch reports:", error);
       } finally {
@@ -258,19 +298,25 @@ export default function Reports() {
     redirect("/");
   }
 
+  const filteredReports = searchTag 
+    ? reports.filter(report => report.tags.includes(searchTag))
+    : reports;
+
   return (
     <div className="flex flex-col h-screen">
       <ReportsHeader />
       <div className="flex-1 overflow-hidden pt-[88px]">
-        <TagSearch />
+        <TagSearch searchTag={searchTag} setSearchTag={setSearchTag} />
         
         <div className="px-3 pb-20 overflow-y-auto h-[calc(100vh-230px)]">
           {isLoading ? (
             <p className="text-white text-center mt-8">Loading reports...</p>
-          ) : reports.length === 0 ? (
-            <p className="text-white text-center mt-8">No reports found</p>
+          ) : filteredReports.length === 0 ? (
+            <p className="text-white text-center mt-8">
+              {searchTag ? `No reports found with tag "${searchTag}"` : "No reports found"}
+            </p>
           ) : (
-            reports.map((report) => (
+            filteredReports.map((report) => (
               <ReportCard 
                 key={report.id} 
                 report={report} 

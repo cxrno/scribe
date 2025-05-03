@@ -27,6 +27,7 @@ export default function MediaAttachmentCreator({
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingAttachment?.media_url || null);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(!!existingAttachment);
+  const [location, setLocation] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [isEraser, setIsEraser] = useState(false);
@@ -62,6 +63,19 @@ export default function MediaAttachmentCreator({
   useEffect(() => {
     if (existingAttachment) {
       fetchAttachmentDetails();
+    }
+    
+    // Get user's location when component mounts
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLocation(`${latitude},${longitude}`);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        }
+      );
     }
   }, [existingAttachment]);
 
@@ -202,7 +216,8 @@ export default function MediaAttachmentCreator({
         null,
         mediaType,
         title,
-        description
+        description,
+        location || undefined
       );
       return;
     }
@@ -221,7 +236,8 @@ export default function MediaAttachmentCreator({
       selectedFile,
       mediaType,
       title,
-      description
+      description,
+      location || undefined
     );
   };
 

@@ -18,6 +18,7 @@ export default function Editor() {
     title: "Unnamed Report",
     description: "",
     tags: [] as string[],
+    location: "No location found",
   });
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState("");
@@ -47,6 +48,7 @@ export default function Editor() {
           title: data.title || "Untitled Report",
           description: data.description || "No description",
           tags: data.tags || [],
+          location: data.location || "No location",
         };
         
         setReport(reportData);
@@ -398,9 +400,9 @@ export default function Editor() {
               />
             </div>
             
-            <div className="bg-[#2A2E52] text-white p-3 rounded-md w-full flex items-center mb-3">
+            <div className="text-white rounded-md w-full flex items-center mb-3">
               <span className="text-blue-400 mr-2">📍</span>
-              <span>todo</span>
+              <span>{report.location.split(',')[0] + ", " + report.location.split(',')[1]}</span>
             </div>
             
             <div className="mb-4">

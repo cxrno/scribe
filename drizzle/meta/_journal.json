@@ -8,6 +8,20 @@
       "when": 1741156353249,
       "tag": "0000_nosy_yellow_claw",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1746229275081,
+      "tag": "0001_sticky_bulldozer",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1746229351213,
+      "tag": "0002_overrated_thunderball",
+      "breakpoints": true
     }
   ]
 }
