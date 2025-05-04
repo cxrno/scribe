@@ -305,10 +305,12 @@ export default function Reports() {
   return (
     <div className="flex flex-col h-screen">
       <ReportsHeader />
-      <div className="flex-1 overflow-hidden pt-[88px]">
-        <TagSearch searchTag={searchTag} setSearchTag={setSearchTag} />
+      <div className="flex-1 overflow-y-auto pt-[88px] pb-[70px]">
+        <div className="sticky top-0 z-10 bg-[#0F1225]">
+          <TagSearch searchTag={searchTag} setSearchTag={setSearchTag} />
+        </div>
         
-        <div className="px-3 pb-20 overflow-y-auto h-[calc(100vh-230px)]">
+        <div className="px-3">
           {isLoading ? (
             <p className="text-white text-center mt-8">Loading reports...</p>
           ) : filteredReports.length === 0 ? (
