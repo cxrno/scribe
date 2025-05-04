@@ -34,6 +34,11 @@ export default function MediaAttachmentCreator({
   const [strokeColor, setStrokeColor] = useState("#000000");
   const canvasRef = useRef<ReactSketchCanvasRef>(null);
   
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  const backgroundInputRef = useRef<HTMLInputElement>(null);
+  const [canvasAspectRatio, setCanvasAspectRatio] = useState<number>(16/9); // Default aspect ratio
+  const [canvasHeight, setCanvasHeight] = useState<number>(264); // Default height
+
   const isEditing = !!existingAttachment;
 
   function getDefaultTitle() {
@@ -65,7 +70,6 @@ export default function MediaAttachmentCreator({
       fetchAttachmentDetails();
     }
     
-    // Get user's location when component mounts
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -76,6 +80,18 @@ export default function MediaAttachmentCreator({
           console.error("Error getting location:", error);
         }
       );
+    }
+  }, [existingAttachment]);
+
+  useEffect(() => {
+    if (existingAttachment && existingAttachment.media_url) {
+      // Load the image to get its dimensions
+      const img = new window.Image();
+      img.onload = () => {
+        const aspectRatio = img.width / img.height;
+        setCanvasAspectRatio(aspectRatio);
+      };
+      img.src = existingAttachment.media_url;
     }
   }, [existingAttachment]);
 
@@ -152,12 +168,48 @@ export default function MediaAttachmentCreator({
     setStrokeColor(newColor);
   };
   
+  const triggerBackgroundInput = () => {
+    if (backgroundInputRef.current) {
+      backgroundInputRef.current.click();
+    }
+  };
+
+  const handleBackgroundSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          const dataUrl = e.target.result as string;
+          setBackgroundImage(dataUrl);
+          
+          // Create an image element to get dimensions
+          const img = new window.Image();
+          img.onload = () => {
+            const aspectRatio = img.width / img.height;
+            setCanvasAspectRatio(aspectRatio);
+          };
+          img.src = dataUrl;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleExportSketch = async () => {
     if (!canvasRef.current) return null;
     
     try {
       const imageData = await canvasRef.current.exportImage("png");
       setPreviewUrl(imageData);
+      
+      // Preserve the aspect ratio when exporting
+      const img = new window.Image();
+      img.onload = () => {
+        const aspectRatio = img.width / img.height;
+        setCanvasAspectRatio(aspectRatio);
+      };
+      img.src = imageData;
       
       const res = await fetch(imageData);
       const blob = await res.blob();
@@ -168,6 +220,10 @@ export default function MediaAttachmentCreator({
       console.error("Error exporting sketch:", error);
       return null;
     }
+  };
+
+  const clearBackground = () => {
+    setBackgroundImage(null);
   };
 
   const handleComplete = async () => {
@@ -288,35 +344,85 @@ export default function MediaAttachmentCreator({
     return (
       <div className="flex flex-col mb-4">
         {previewUrl ? (
-          <div className="relative w-full h-64 bg-[#2A2E52] rounded-lg overflow-hidden mb-2">
-            <Image 
-              src={previewUrl} 
-              alt="Sketch preview" 
-              fill 
-              style={{ objectFit: 'contain' }} 
-            />
+          <div 
+            className="relative w-full bg-[#2A2E52] rounded-lg overflow-hidden mb-2 flex justify-center"
+            style={{ 
+              height: canvasHeight,
+              maxHeight: '400px'
+            }}
+          >
+            <div style={{ 
+              width: `${canvasHeight * canvasAspectRatio}px`,
+              height: canvasHeight,
+              maxWidth: '100%',
+              position: 'relative'
+            }}>
+              <Image 
+                src={previewUrl} 
+                alt="Sketch preview" 
+                fill 
+                style={{ objectFit: 'contain' }} 
+              />
+            </div>
           </div>
         ) : (
-          <div className="w-full h-64 bg-[#2A2E52] rounded-lg mb-2">
-            <ReactSketchCanvas
-              ref={canvasRef}
-              width="100%"
-              height="100%"
-              strokeWidth={4}
-              strokeColor={strokeColor}
-              backgroundImage=""
-              exportWithBackgroundImage={false}
-              style={{
-                border: "0.0625rem solid #9c9c9c",
-                borderRadius: "0.25rem",
-              }}
-            />
+          <div 
+            className="w-full bg-[#2A2E52] rounded-lg mb-2 flex justify-center"
+            style={{ 
+              height: canvasHeight,
+              maxHeight: '400px'
+            }}
+          >
+            <div style={{ 
+              width: backgroundImage ? `${canvasHeight * canvasAspectRatio}px` : '100%',
+              height: canvasHeight,
+              maxWidth: '100%'
+            }}>
+              <ReactSketchCanvas
+                ref={canvasRef}
+                width="100%"
+                height="100%"
+                strokeWidth={4}
+                strokeColor={strokeColor}
+                backgroundImage={backgroundImage || ""}
+                exportWithBackgroundImage={true}
+                style={{
+                  border: "0.0625rem solid #9c9c9c",
+                  borderRadius: "0.25rem",
+                }}
+              />
+            </div>
           </div>
         )}
         
         <div className="flex flex-wrap gap-2 justify-center">
           {!previewUrl ? (
             <>
+              <input
+                type="file"
+                ref={backgroundInputRef}
+                onChange={handleBackgroundSelect}
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+              />
+              
+              <button 
+                onClick={triggerBackgroundInput}
+                className="bg-gray-600 text-white py-2 px-3 rounded-md flex items-center gap-1"
+              >
+                <FaImage size={14} /> {backgroundImage ? "Change Background" : "Add Photo Background"}
+              </button>
+              
+              {backgroundImage && (
+                <button 
+                  onClick={clearBackground}
+                  className="bg-red-500 text-white py-2 px-3 rounded-md flex items-center gap-1"
+                >
+                  <FaTrash size={14} /> Remove Background
+                </button>
+              )}
+              
               <button 
                 onClick={handleClearCanvas}
                 className="bg-gray-600 text-white py-2 px-3 rounded-md flex items-center gap-1"
@@ -360,12 +466,23 @@ export default function MediaAttachmentCreator({
               </button>
             </>
           ) : (
-            <button 
-              onClick={() => setPreviewUrl(null)}
-              className="bg-blue-500 text-white py-2 px-3 rounded-md"
-            >
-              New Sketch
-            </button>
+            <>
+              <button 
+                onClick={() => setPreviewUrl(null)}
+                className="bg-blue-500 text-white py-2 px-3 rounded-md flex items-center gap-1"
+              >
+                <FaPencilAlt size={14} /> New Sketch
+              </button>
+              <button 
+                onClick={() => {
+                  setBackgroundImage(previewUrl);
+                  setPreviewUrl(null);
+                }}
+                className="bg-gray-500 text-white py-2 px-3 rounded-md flex items-center gap-1"
+              >
+                <FaPencilAlt size={14} /> Edit Sketch
+              </button>
+            </>
           )}
         </div>
       </div>
