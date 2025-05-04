@@ -348,7 +348,7 @@ export default function MediaAttachmentCreator({
             className="relative w-full bg-[#2A2E52] rounded-lg overflow-hidden mb-2 flex justify-center"
             style={{ 
               height: canvasHeight,
-              maxHeight: '400px'
+              maxHeight: '300px'
             }}
           >
             <div style={{ 
@@ -370,7 +370,7 @@ export default function MediaAttachmentCreator({
             className="w-full bg-[#2A2E52] rounded-lg mb-2 flex justify-center"
             style={{ 
               height: canvasHeight,
-              maxHeight: '400px'
+              maxHeight: '300px'
             }}
           >
             <div style={{ 
@@ -395,9 +395,9 @@ export default function MediaAttachmentCreator({
           </div>
         )}
         
-        <div className="flex flex-wrap gap-2 justify-center">
-          {!previewUrl ? (
-            <>
+        {!previewUrl ? (
+          <div className="flex flex-col gap-2 max-w-md mx-auto w-full">
+            <div className="flex justify-center gap-2 mb-1">
               <input
                 type="file"
                 ref={backgroundInputRef}
@@ -409,9 +409,9 @@ export default function MediaAttachmentCreator({
               
               <button 
                 onClick={triggerBackgroundInput}
-                className="bg-gray-600 text-white py-2 px-3 rounded-md flex items-center gap-1"
+                className="bg-gray-600 text-white py-2 px-3 rounded-md flex items-center gap-1 flex-1 justify-center"
               >
-                <FaImage size={14} /> {backgroundImage ? "Change Background" : "Add Photo Background"}
+                <FaImage size={14} /> {backgroundImage ? "Change Photo" : "Add Photo"}
               </button>
               
               {backgroundImage && (
@@ -419,10 +419,12 @@ export default function MediaAttachmentCreator({
                   onClick={clearBackground}
                   className="bg-red-500 text-white py-2 px-3 rounded-md flex items-center gap-1"
                 >
-                  <FaTrash size={14} /> Remove Background
+                  <FaTrash size={14} /> Remove
                 </button>
               )}
-              
+            </div>
+            
+            <div className="flex justify-center gap-2 mb-1">
               <button 
                 onClick={handleClearCanvas}
                 className="bg-gray-600 text-white py-2 px-3 rounded-md flex items-center gap-1"
@@ -433,58 +435,59 @@ export default function MediaAttachmentCreator({
                 onClick={handleUndoCanvas}
                 className="bg-gray-600 text-white py-2 px-3 rounded-md flex items-center gap-1"
               >
-                <FaUndo size={14} /> Undo
+                <FaUndo size={14} />
               </button>
               <button 
                 onClick={handleRedoCanvas}
                 className="bg-gray-600 text-white py-2 px-3 rounded-md flex items-center gap-1"
               >
-                <FaRedo size={14} /> Redo
+                <FaRedo size={14} />
               </button>
               <button 
                 onClick={handleToggleEraser}
                 className={`${isEraser ? 'bg-red-500' : 'bg-gray-600'} text-white py-2 px-3 rounded-md flex items-center gap-1`}
               >
-                {isEraser ? <FaPencilAlt size={14} /> : <FaEraser size={14} />} 
-                {isEraser ? "Use Pen" : "Use Eraser"}
+                {isEraser ? <FaPencilAlt size={14} /> : <FaEraser size={14} />}
               </button>
               <div className="flex items-center bg-gray-600 text-white py-1 px-3 rounded-md">
-                <label htmlFor="colorPicker" className="mr-2">Color:</label>
                 <input 
-                  id="colorPicker"
                   type="color" 
                   value={strokeColor} 
                   onChange={handleColorChange}
                   className="w-6 h-6 cursor-pointer"
+                  aria-label="Select color"
                 />
               </div>
+            </div>
+            
+            <div className="flex justify-center">
               <button 
                 onClick={handleExportSketch}
-                className="bg-blue-500 text-white py-2 px-3 rounded-md"
+                className="bg-blue-500 text-white py-2 px-4 rounded-md flex items-center gap-1 w-full justify-center"
               >
-                Save Sketch
+                <FaCheck size={14} /> Save Sketch
               </button>
-            </>
-          ) : (
-            <>
-              <button 
-                onClick={() => setPreviewUrl(null)}
-                className="bg-blue-500 text-white py-2 px-3 rounded-md flex items-center gap-1"
-              >
-                <FaPencilAlt size={14} /> New Sketch
-              </button>
-              <button 
-                onClick={() => {
-                  setBackgroundImage(previewUrl);
-                  setPreviewUrl(null);
-                }}
-                className="bg-gray-500 text-white py-2 px-3 rounded-md flex items-center gap-1"
-              >
-                <FaPencilAlt size={14} /> Edit Sketch
-              </button>
-            </>
-          )}
-        </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center gap-2 max-w-md mx-auto">
+            <button 
+              onClick={() => setPreviewUrl(null)}
+              className="bg-blue-500 text-white py-2 px-3 rounded-md flex items-center gap-1"
+            >
+              <FaPencilAlt size={14} /> New Sketch
+            </button>
+            <button 
+              onClick={() => {
+                setBackgroundImage(previewUrl);
+                setPreviewUrl(null);
+              }}
+              className="bg-green-500 text-white py-2 px-3 rounded-md flex items-center gap-1"
+            >
+              <FaPencilAlt size={14} /> Edit This Sketch
+            </button>
+          </div>
+        )}
       </div>
     );
   };
