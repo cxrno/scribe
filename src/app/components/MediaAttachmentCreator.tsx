@@ -21,7 +21,8 @@ export default function MediaAttachmentCreator({
   existingAttachment,
   mediaType
 }: MediaAttachmentCreatorProps) {
-  const [title, setTitle] = useState(getDefaultTitle());
+  const [isDefaultTitle, setIsDefaultTitle] = useState(true);
+  const [title, setTitle] = useState("");
   const [description, setDescription] = useState(existingAttachment?.description || "");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingAttachment?.media_url || null);
@@ -41,9 +42,17 @@ export default function MediaAttachmentCreator({
 
   const isEditing = !!existingAttachment;
 
+  useEffect(() => {
+    setTitle(getDefaultTitle());
+  }, [existingAttachment, mediaType]);
+
   function getDefaultTitle() {
-    if (existingAttachment?.title) return existingAttachment.title;
+    if (existingAttachment?.title) {
+      setIsDefaultTitle(false);
+      return existingAttachment.title;
+    }
     
+    setIsDefaultTitle(true);
     switch (mediaType) {
       case 'picture': return 'New Image';
       case 'video': return 'New Video';
@@ -543,6 +552,13 @@ export default function MediaAttachmentCreator({
     );
   };
 
+  const handleTitleFocus = () => {
+    if (isDefaultTitle) {
+      setTitle("");
+      setIsDefaultTitle(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-[#1B1F3F] flex items-center justify-center z-50">
@@ -563,7 +579,11 @@ export default function MediaAttachmentCreator({
         <input
           type="text"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={(e) => {
+            setTitle(e.target.value);
+            setIsDefaultTitle(false);
+          }}
+          onFocus={handleTitleFocus}
           className="w-full bg-[#2A2E52] text-white p-2 rounded-md mb-3 text-sm"
           placeholder="Title"
         />
